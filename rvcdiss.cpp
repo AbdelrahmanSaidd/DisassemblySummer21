@@ -55,11 +55,15 @@ void instDecExec(unsigned int instWord)
 	funct3 = (instWord >> 12) & 0x00000007;
 	rs1 = (instWord >> 15) & 0x0000001F;
 	rs2 = (instWord >> 20) & 0x0000001F;
-	
-	funct7 = (instWord >> 25) & 0x0000007F; //CHECK THIS
+	funct7 = (instWord >> 25) & 0x0000001F; //OUR TOUCH
 
 	// — inst[31] — inst[30:25] inst[24:21] inst[20]
 	I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
+	S_imm = ((instWord >> 25) | rd) | (((instWord >> 31) ? 0xFFFFF800 : 0x0)); // first part adds the leftmost 7 bits to rd to get the 12-bit immediate 
+																			  // Second part checks the leftmost bit for the sign 
+	B_imm = ((rd & 0x1E)) | ((funct7 & 0x3F) << 5) | ((rd & 0x1) << 11) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
+	//U_imm =
+	//J_imm = 
 
 	printPrefix(instPC, instWord);
 
@@ -102,7 +106,8 @@ void instDecExec(unsigned int instWord)
 			cout << "\tUnkown R Instruction \n";
 		}
 	}
-	else if (opcode == 0x13) {	// I instructions
+
+	else if (opcode == 0x13) {	// I-Instructions
 		switch (funct3) {
 		case 0:	cout << "\tADDI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
 			break;
@@ -110,12 +115,54 @@ void instDecExec(unsigned int instWord)
 			cout << "\tUnkown I Instruction \n";
 		}
 	}
-	else {
+
+	else if (opcode == 0x23) //S-Type
+	{
+		switch (funct3)
+		{
+		case 0:  cout << "  SH  x" << rs2 << ", " << hex << "0x" << (int)S_imm << "(x" << rs1 << ")" << endl;
+			break;
+		case 1:  cout << "  SB  x" << rs2 << ", " << hex << "0x" << (int)S_imm << "(x" << rs1 << ")" << endl;
+			break;
+		case 2:  cout << "  SW  x" << rs2 << ", " << hex << "0x" << (int)S_imm << "(x" << rs1 << ")" << endl;
+			break;
+		default:
+			cout << "\tUnknown S Instruction \n";
+		}
+	}
+	else if (opcode == 0x63) //B-Type
+	{
+		switch (funct3)
+		{
+		case 0:
+			cout << "  BEQ  x" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << endl;
+			break;
+		case 1:
+			cout << "  BNE  x" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << endl;
+			break;
+		case 4:
+			cout << "  BLT  x" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << endl;
+			break;
+		case 5:
+			cout << "  BGE  x" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << endl;
+			break;
+		case 6:
+			cout << "  BLTU  x" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << endl;
+			break;
+		case 7:
+			cout << "  BGEU  x" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << endl;
+			break;
+		default:
+			cout << " function 3 has a wrong number/ branch instructions" << endl;
+		}
+	}
+	else
+	{
 		cout << "\tUnkown Instruction \n";
 	}
-
 }
 
+// edited part
 int main(int argc, char* argv[]) {
 
 	unsigned int instWord = 0;
@@ -124,7 +171,7 @@ int main(int argc, char* argv[]) {
 
 	if (argc < 2) emitError("use: rvcdiss <machine_code_file_name>\n");
 
-	inFile.open(argv[1], ios::in | ios::binary | ios::ate);
+	inFile.open(argv[1], ios::in | ios::binary | ios::ate); /////// edited part
 
 	if (inFile.is_open())
 	{
@@ -133,11 +180,8 @@ int main(int argc, char* argv[]) {
 		inFile.seekg(0, inFile.beg);
 		if (!inFile.read((char*)memory, fsize)) emitError("Cannot read from input file\n");
 
-		while (true) {
-			instWord = (unsigned char)memory[pc] |
-				(((unsigned char)memory[pc + 1]) << 8) |
-				(((unsigned char)memory[pc + 2]) << 16) |
-				(((unsigned char)memory[pc + 3]) << 24);
+		while (true) {	// 110111000110101000000000    10101010 // We'll return to it
+			instWord = (unsigned char)memory[pc] | (((unsigned char)memory[pc + 1]) << 8) | (((unsigned char)memory[pc + 2]) << 16) | (((unsigned char)memory[pc + 3]) << 24);
 			pc += 4;
 			// remove the following line once you have a complete simulator
 			if (pc == 40) break;			// stop when PC reached address 32

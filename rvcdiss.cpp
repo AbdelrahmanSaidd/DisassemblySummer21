@@ -56,7 +56,7 @@ void instDecExec(unsigned int instWord)
 	rs1 = (instWord >> 15) & 0x0000001F;
 	rs2 = (instWord >> 20) & 0x0000001F;
 	
-	funct7 = (instWord >> 25) & 0x0000007F; //OUR TOUCH
+	funct7 = (instWord >> 25) & 0x0000007F; //CHECK THIS
 
 	// — inst[31] — inst[30:25] inst[24:21] inst[20]
 	I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));

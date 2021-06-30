@@ -66,7 +66,8 @@ void instDecExec(unsigned int instWord)
 																			  // Second part checks the leftmost bit for the sign 
 	B_imm = ((rd & 0x1E)) | ((funct7 & 0x3F) << 5) | ((rd & 0x1) << 11) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
 	//U_imm =
-	//J_imm = 
+	J_imm = ((instWord && 0x7FE00000) >> 20) | ((instWord >> 20 & 0x1) << 11) | ((instWord >> 12 & 0x7F) << 12)
+		| ((instword >> 31) ? 0xFFFFF800 : 0x0));
 
 	printPrefix(instPC, instWord);
 
@@ -112,23 +113,24 @@ void instDecExec(unsigned int instWord)
 
 	else if (opcode == 0x13) {	// I-Instructions
 		switch (funct3) {
-		case 0:	cout << "\tADDI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+		case 0:	cout << "\tADDI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
 			break;
-		case 1: cout << "\tSLLI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+		case 1: cout << "\tSLLI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
 			break;
-		case 2: cout << "\tSLTI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+		case 2: cout << "\tSLTI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
 			break;
-		case 3: cout << "\tSLTIU\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+		case 3: cout << "\tSLTIU\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
 			break;
-		case 4: cout << "\tXORI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+		case 4: cout << "\tXORI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
 			break;
 		case 5: if (funct7 == 0)
-					cout << "\tSRLI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
-			  else  cout << "\tSRAI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			cout << "\tSRLI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
+			  else 
+			cout << "\tSRAI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
 			break;
-		case 6:  cout << "\tORI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+		case 6:  cout << "\tORI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
 			break;
-		case 7: cout << "\tANDI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+		case 7: cout << "\tANDI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
 			break;
 		default:
 			cout << "\tUnkown I Instruction \n";
@@ -191,11 +193,7 @@ void instDecExec(unsigned int instWord)
 			cout << " Unkown Type-B Instruction " << "\n";
 		}
 	}
-	else if (opcode == 0x37) //
-	{
 
-	}
-	else if(opcode == 0x17)
 	else
 	{
 		cout << "\tUnkown Instruction \n";

@@ -111,11 +111,43 @@ void instDecExec(unsigned int instWord)
 		switch (funct3) {
 		case 0:	cout << "\tADDI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
 			break;
+		case 1: cout << "\tSLLI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			break;
+		case 2: cout << "\tSLTI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			break;
+		case 3: cout << "\tSLTIU\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			break;
+		case 4: cout << "\tXORI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			break;
+		case 5: if (funct7 == 0)
+					cout << "\tSRLI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			  else  cout << "\tSRAI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			break;
+		case 6:  cout << "\tORI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			break;
+		case 7: cout << "\tANDI\tx" << rd << ", x" << rs1 << ", " << hex << "0x" << (int)I_imm << "\n";
+			break;
 		default:
 			cout << "\tUnkown I Instruction \n";
 		}
 	}
-
+	else if (opcode == 0x3) // Type- I Load instructions
+	{
+		switch (funct3)
+		{
+		case 0: cout << "\tLB\tx" << rd << ", " << hex << "0x" << (int)I_imm << "(x" << rs1 << ")" << "\n";
+			break;
+		case 1: cout << "\tLH\tx" << rd << ", " << hex << "0x" << (int)I_imm << "(x" << rs1 << ")" << "\n";
+			break;
+		case 2: cout << "\tLW\tx" << rd << ", " << hex << "0x" << (int)I_imm << "(x" << rs1 << ")" << "\n";
+			break;
+		case 4: cout << "\tLBU\tx" << rd << ", " << hex << "0x" << (int)I_imm << "(x" << rs1 << ")" << "\n";
+			break;
+		case 5: cout << "\tLHU\tx" << rd << ", " << hex << "0x" << (int)I_imm << "(x" << rs1 << ")" << "\n";
+			break;
+		default: cout << "Unkown Type-I Load instruction \n";
+		}
+	}
 	else if (opcode == 0x23) //S-Type
 	{
 		switch (funct3)

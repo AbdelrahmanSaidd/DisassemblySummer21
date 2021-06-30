@@ -155,14 +155,14 @@ void instDecExec(unsigned int instWord)
 	{
 		switch (funct3)
 		{
-		case 0:  cout << "  SH  " << reg[rs2] << ", " << hex << "0x" << (int)S_imm << "(" << reg[rs1] << ")" << endl;
+		case 0:  cout << "\tSH\t" << reg[rs2] << ", " << hex << "0x" << (int)S_imm << "(" << reg[rs1] << ")" << "\n";
 			break;
-		case 1:  cout << "  SB  " << reg[rs2] << ", " << hex << "0x" << (int)S_imm << "(" << reg[rs1] << ")" << endl;
+		case 1:  cout << "\tSB\t" << reg[rs2] << ", " << hex << "0x" << (int)S_imm << "(" << reg[rs1] << ")" << "\n";
 			break;
-		case 2:  cout << "  SW  " << reg[rs2] << ", " << hex << "0x" << (int)S_imm << "(" << reg[rs1] << ")" << endl;
+		case 2:  cout << "\tSW\t" << reg[rs2] << ", " << hex << "0x" << (int)S_imm << "(" << reg[rs1] << ")" << "\n";
 			break;
 		default:
-			cout << "\tUnknown S Instruction \n";
+			cout << "\tUnknown Type-S Instruction \n";
 		}
 	}
 	else if (opcode == 0x63) //B-Type
@@ -170,27 +170,32 @@ void instDecExec(unsigned int instWord)
 		switch (funct3)
 		{
 		case 0:
-			cout << "  BEQ  " << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << endl;
+			cout << "\tBEQ\t" << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << "\n";
 			break;
 		case 1:
-			cout << "  BNE  " << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << endl;
+			cout << "\tBNE\t" << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << "\n";
 			break;
 		case 4:
-			cout << "  BLT  " << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << endl;
+			cout << "\tBLT\t" << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << "\n";
 			break;
 		case 5:
-			cout << "  BGE  " << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << endl;
+			cout << "\tBGE\t" << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << "\n";
 			break;
 		case 6:
-			cout << "  BLTU  " << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << endl;
+			cout << "\tBLTU\t" << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << "\n";
 			break;
 		case 7:
-			cout << "  BGEU  " << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << endl;
+			cout << "\tBGEU\t" << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << "\n";
 			break;
 		default:
-			cout << " function 3 has a wrong number/ branch instructions" << endl;
+			cout << " Unkown Type-B Instruction " << "\n";
 		}
 	}
+	else if (opcode == 0x37) //
+	{
+
+	}
+	else if(opcode == 0x17)
 	else
 	{
 		cout << "\tUnkown Instruction \n";

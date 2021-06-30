@@ -29,7 +29,7 @@
 using namespace std;
 
 unsigned int pc = 0x0;
-string reg[32] = { "zero", "ra", "sp", "gp", "tp","t0", "t1", "t2", "s0", "s1", 
+string reg[32] = { "zero", "ra", "sp", "gp", "tp","t0", "t1", "t2", "s0", "s1",
 					"a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7","s2", "s3",
 					"s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6" };
 
@@ -65,137 +65,156 @@ void instDecExec(unsigned int instWord)
 	S_imm = ((instWord >> 25) | rd) | (((instWord >> 31) ? 0xFFFFF800 : 0x0)); // first part adds the leftmost 7 bits to rd to get the 12-bit immediate 
 																			  // Second part checks the leftmost bit for the sign 
 	B_imm = ((rd & 0x1E)) | ((funct7 & 0x3F) << 5) | ((rd & 0x1) << 11) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
-	//U_imm =
-	//J_imm = 
+	U_imm = ((insWord & 0xFFFFF00)>>12);
+	J_imm = ((instWord && 0x7FE00000) >> 20) | ((instWord >> 20 & 0x1) << 11) | ((instWord >> 12 & 0x7F) << 12)
+		| ((instWord >> 31) ? 0xFFFFF800 : 0x0));
 
-	printPrefix(instPC, instWord);
+		printPrefix(instPC, instWord);
 
-	if (opcode == 0x33) {		// R Instructions
-		switch (funct3) {
-		case 0:
-			if (funct7 == 32)
-				cout << "\tSUB\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
-			else
-				cout << "\tADD\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+		if (opcode == 0x33) {		// R Instructions
+			switch (funct3) {
+			case 0:
+				if (funct7 == 32)
+					cout << "\tSUB\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+				else
+					cout << "\tADD\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
 
-			break;
-		case 1:
-			cout << "\tSLL\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
-			break;
-		case 2:
-			cout << "\tSLT\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
-			break;
-		case 3:
-			cout << "\tSLTU\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
-			break;
-		case 4:
-			cout << "\tXOR\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
-			break;
-		case 5:
-			if (funct7 == 32)
-				cout << "\tSRA\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
-			else
-				cout << "\tSRL\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+				break;
+			case 1:
+				cout << "\tSLL\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+				break;
+			case 2:
+				cout << "\tSLT\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+				break;
+			case 3:
+				cout << "\tSLTU\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+				break;
+			case 4:
+				cout << "\tXOR\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+				break;
+			case 5:
+				if (funct7 == 32)
+					cout << "\tSRA\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+				else
+					cout << "\tSRL\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
 
-			break;
-		case 6:
-			cout << "\tOR\tx" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
-			break;
+				break;
+			case 6:
+				cout << "\tOR\tx" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+				break;
 
-		case 7:
-			cout << "\tAND\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
-			break;
-		default:
-			cout << "\tUnkown R Instruction \n";
+			case 7:
+				cout << "\tAND\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+				break;
+			default:
+				cout << "\tUnkown R Instruction \n";
+			}
 		}
-	}
 
-	else if (opcode == 0x13) {	// I-Instructions
-		switch (funct3) {
-		case 0:	cout << "\tADDI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
-			break;
-		case 1: cout << "\tSLLI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
-			break;
-		case 2: cout << "\tSLTI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
-			break;
-		case 3: cout << "\tSLTIU\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
-			break;
-		case 4: cout << "\tXORI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
-			break;
-		case 5: if (funct7 == 0)
-			cout << "\tSRLI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
-			  else 
-			cout << "\tSRAI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
-			break;
-		case 6:  cout << "\tORI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
-			break;
-		case 7: cout << "\tANDI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
-			break;
-		default:
-			cout << "\tUnkown I Instruction \n";
+		else if (opcode == 0x13) {	// I-Instructions
+			switch (funct3) {
+			case 0:	cout << "\tADDI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
+				break;
+			case 1: cout << "\tSLLI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
+				break;
+			case 2: cout << "\tSLTI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
+				break;
+			case 3: cout << "\tSLTIU\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
+				break;
+			case 4: cout << "\tXORI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
+				break;
+			case 5: if (funct7 == 0)
+				cout << "\tSRLI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
+				  else
+				cout << "\tSRAI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
+				break;
+			case 6:  cout << "\tORI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
+				break;
+			case 7: cout << "\tANDI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
+				break;
+			default:
+				cout << "\tUnkown I Instruction \n";
+			}
 		}
-	}
-	else if (opcode == 0x3) // Type- I Load instructions
-	{
-		switch (funct3)
+		else if (opcode == 0x3) // Type- I Load instructions
 		{
-		case 0: cout << "\tLB\t" << reg[rd] << ", " << hex << "0x" << (int)I_imm << "(" << reg[rs1] << ")" << "\n";
-			break;
-		case 1: cout << "\tLH\t" << reg[rd] << ", " << hex << "0x" << (int)I_imm << "(" << reg[rs1] << ")" << "\n";
-			break;
-		case 2: cout << "\tLW\t" << reg[rd] << ", " << hex << "0x" << (int)I_imm << "(" << reg[rs1] << ")" << "\n";
-			break;
-		case 4: cout << "\tLBU\t" << reg[rd] << ", " << hex << "0x" << (int)I_imm << "(" << reg[rs1] << ")" << "\n";
-			break;
-		case 5: cout << "\tLHU\t" << reg[rd] << ", " << hex << "0x" << (int)I_imm << "(" << reg[rs1] << ")" << "\n";
-			break;
-		default: cout << "Unkown Type-I Load instruction \n";
+			switch (funct3)
+			{
+			case 0: cout << "\tLB\t" << reg[rd] << ", " << hex << "0x" << (int)I_imm << "(" << reg[rs1] << ")" << "\n";
+				break;
+			case 1: cout << "\tLH\t" << reg[rd] << ", " << hex << "0x" << (int)I_imm << "(" << reg[rs1] << ")" << "\n";
+				break;
+			case 2: cout << "\tLW\t" << reg[rd] << ", " << hex << "0x" << (int)I_imm << "(" << reg[rs1] << ")" << "\n";
+				break;
+			case 4: cout << "\tLBU\t" << reg[rd] << ", " << hex << "0x" << (int)I_imm << "(" << reg[rs1] << ")" << "\n";
+				break;
+			case 5: cout << "\tLHU\t" << reg[rd] << ", " << hex << "0x" << (int)I_imm << "(" << reg[rs1] << ")" << "\n";
+				break;
+			default: cout << "Unkown Type-I Load instruction \n";
+			}
 		}
-	}
-	else if (opcode == 0x23) //S-Type
-	{
-		switch (funct3)
+		else if (opcode == 0x23) //S-Type
 		{
-		case 0:  cout << "  SH  " << reg[rs2] << ", " << hex << "0x" << (int)S_imm << "(" << reg[rs1] << ")" << endl;
-			break;
-		case 1:  cout << "  SB  " << reg[rs2] << ", " << hex << "0x" << (int)S_imm << "(" << reg[rs1] << ")" << endl;
-			break;
-		case 2:  cout << "  SW  " << reg[rs2] << ", " << hex << "0x" << (int)S_imm << "(" << reg[rs1] << ")" << endl;
-			break;
-		default:
-			cout << "\tUnknown S Instruction \n";
+			switch (funct3)
+			{
+			case 0:  cout << "\tSH\t" << reg[rs2] << ", " << hex << "0x" << (int)S_imm << "(" << reg[rs1] << ")" << "\n";
+				break;
+			case 1:  cout << "\tSB\t" << reg[rs2] << ", " << hex << "0x" << (int)S_imm << "(" << reg[rs1] << ")" << "\n";
+				break;
+			case 2:  cout << "\tSW\t" << reg[rs2] << ", " << hex << "0x" << (int)S_imm << "(" << reg[rs1] << ")" << "\n";
+				break;
+			default:
+				cout << "\tUnknown Type-S Instruction \n";
+			}
 		}
-	}
-	else if (opcode == 0x63) //B-Type
-	{
-		switch (funct3)
+		else if (opcode == 0x63) //B-Type
 		{
-		case 0:
-			cout << "  BEQ  " << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << endl;
-			break;
-		case 1:
-			cout << "  BNE  " << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << endl;
-			break;
-		case 4:
-			cout << "  BLT  " << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << endl;
-			break;
-		case 5:
-			cout << "  BGE  " << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << endl;
-			break;
-		case 6:
-			cout << "  BLTU  " << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << endl;
-			break;
-		case 7:
-			cout << "  BGEU  " << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << endl;
-			break;
-		default:
-			cout << " function 3 has a wrong number/ branch instructions" << endl;
+			switch (funct3)
+			{
+			case 0:
+				cout << "\tBEQ\t" << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << "\n";
+				break;
+			case 1:
+				cout << "\tBNE\t" << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << "\n";
+				break;
+			case 4:
+				cout << "\tBLT\t" << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << "\n";
+				break;
+			case 5:
+				cout << "\tBGE\t" << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << "\n";
+				break;
+			case 6:
+				cout << "\tBLTU\t" << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << "\n";
+				break;
+			case 7:
+				cout << "\tBGEU\t" << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << "\n";
+				break;
+			default:
+				cout << " Unkown Type-B Instruction " << "\n";
+			}
 		}
-	}
-	else
-	{
-		cout << "\tUnkown Instruction \n";
-	}
+		else if (opcode == 0x37) //LUI
+		{
+			cout << "\tLUI\t" << reg[rs1] << reg[rd] << ", " << hex << "0x" << (int)U_imm << endl;
+		}
+
+		else if (opcode == 0x17) //AUIPC
+		{
+			cout << "\tAUIPC\t" << reg[rs1] << reg[rd] << ", " << hex << "0x" << (int)U_imm << endl;
+		}
+		else if (opcode == 0x67) //JALR
+		{
+		cout << "\tJALR\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
+		}
+		else if (opcodr == 0x6F) //J-Type
+		{
+			cout << " JAL " << reg[rs1] << " , " << hex << "0x" << (int)J_imm << endl;
+		}
+		
+		else
+		{
+			cout << "\tUnkown Instruction \n";
+		}
 }
 
 // edited part
@@ -218,8 +237,6 @@ int main(int argc, char* argv[]) {
 
 		while (true) {	// 110111000110101000000000    10101010 // We'll return to it
 			instWord = (unsigned char)memory[pc] | (((unsigned char)memory[pc + 1]) << 8) | (((unsigned char)memory[pc + 2]) << 16) | (((unsigned char)memory[pc + 3]) << 24);
-			int temp = instWord & 0x0000001C;
-
 			pc += 4;
 			// remove the following line once you have a complete simulator
 			if (pc == 40) break;			// stop when PC reached address 32

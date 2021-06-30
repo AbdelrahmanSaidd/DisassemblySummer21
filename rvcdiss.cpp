@@ -29,6 +29,9 @@
 using namespace std;
 
 unsigned int pc = 0x0;
+string reg[32] = { "zero", "ra", "sp", "gp", "tp","t0", "t1", "t2", "s0", "s1", 
+					"a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7","s2", "s3",
+					"s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6" };
 
 char memory[8 * 1024];	// only 8KB of memory located at address 0
 
@@ -71,36 +74,36 @@ void instDecExec(unsigned int instWord)
 		switch (funct3) {
 		case 0:
 			if (funct7 == 32)
-				cout << "\tSUB\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+				cout << "\tSUB\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
 			else
-				cout << "\tADD\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+				cout << "\tADD\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
 
 			break;
 		case 1:
-			cout << "\tSLL\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+			cout << "\tSLL\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
 			break;
 		case 2:
-			cout << "\tSLT\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+			cout << "\tSLT\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
 			break;
 		case 3:
-			cout << "\tSLTU\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+			cout << "\tSLTU\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
 			break;
 		case 4:
-			cout << "\tXOR\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+			cout << "\tXOR\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
 			break;
 		case 5:
 			if (funct7 == 32)
-				cout << "\tSRA\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+				cout << "\tSRA\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
 			else
-				cout << "\tSRL\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+				cout << "\tSRL\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
 
 			break;
 		case 6:
-			cout << "\tOR\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+			cout << "\tOR\tx" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
 			break;
 
 		case 7:
-			cout << "\tAND\tx" << rd << ", x" << rs1 << ", x" << rs2 << "\n";
+			cout << "\tAND\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
 			break;
 		default:
 			cout << "\tUnkown R Instruction \n";
@@ -135,15 +138,15 @@ void instDecExec(unsigned int instWord)
 	{
 		switch (funct3)
 		{
-		case 0: cout << "\tLB\tx" << rd << ", " << hex << "0x" << (int)I_imm << "(x" << rs1 << ")" << "\n";
+		case 0: cout << "\tLB\t" << reg[rd] << ", " << hex << "0x" << (int)I_imm << "(" << reg[rs1] << ")" << "\n";
 			break;
-		case 1: cout << "\tLH\tx" << rd << ", " << hex << "0x" << (int)I_imm << "(x" << rs1 << ")" << "\n";
+		case 1: cout << "\tLH\t" << reg[rd] << ", " << hex << "0x" << (int)I_imm << "(" << reg[rs1] << ")" << "\n";
 			break;
-		case 2: cout << "\tLW\tx" << rd << ", " << hex << "0x" << (int)I_imm << "(x" << rs1 << ")" << "\n";
+		case 2: cout << "\tLW\t" << reg[rd] << ", " << hex << "0x" << (int)I_imm << "(" << reg[rs1] << ")" << "\n";
 			break;
-		case 4: cout << "\tLBU\tx" << rd << ", " << hex << "0x" << (int)I_imm << "(x" << rs1 << ")" << "\n";
+		case 4: cout << "\tLBU\t" << reg[rd] << ", " << hex << "0x" << (int)I_imm << "(" << reg[rs1] << ")" << "\n";
 			break;
-		case 5: cout << "\tLHU\tx" << rd << ", " << hex << "0x" << (int)I_imm << "(x" << rs1 << ")" << "\n";
+		case 5: cout << "\tLHU\t" << reg[rd] << ", " << hex << "0x" << (int)I_imm << "(" << reg[rs1] << ")" << "\n";
 			break;
 		default: cout << "Unkown Type-I Load instruction \n";
 		}
@@ -152,11 +155,11 @@ void instDecExec(unsigned int instWord)
 	{
 		switch (funct3)
 		{
-		case 0:  cout << "  SH  x" << rs2 << ", " << hex << "0x" << (int)S_imm << "(x" << rs1 << ")" << endl;
+		case 0:  cout << "  SH  " << reg[rs2] << ", " << hex << "0x" << (int)S_imm << "(" << reg[rs1] << ")" << endl;
 			break;
-		case 1:  cout << "  SB  x" << rs2 << ", " << hex << "0x" << (int)S_imm << "(x" << rs1 << ")" << endl;
+		case 1:  cout << "  SB  " << reg[rs2] << ", " << hex << "0x" << (int)S_imm << "(" << reg[rs1] << ")" << endl;
 			break;
-		case 2:  cout << "  SW  x" << rs2 << ", " << hex << "0x" << (int)S_imm << "(x" << rs1 << ")" << endl;
+		case 2:  cout << "  SW  " << reg[rs2] << ", " << hex << "0x" << (int)S_imm << "(" << reg[rs1] << ")" << endl;
 			break;
 		default:
 			cout << "\tUnknown S Instruction \n";
@@ -167,22 +170,22 @@ void instDecExec(unsigned int instWord)
 		switch (funct3)
 		{
 		case 0:
-			cout << "  BEQ  x" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << endl;
+			cout << "  BEQ  " << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << endl;
 			break;
 		case 1:
-			cout << "  BNE  x" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << endl;
+			cout << "  BNE  " << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << endl;
 			break;
 		case 4:
-			cout << "  BLT  x" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << endl;
+			cout << "  BLT  " << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << endl;
 			break;
 		case 5:
-			cout << "  BGE  x" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << endl;
+			cout << "  BGE  " << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << endl;
 			break;
 		case 6:
-			cout << "  BLTU  x" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << endl;
+			cout << "  BLTU  " << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << endl;
 			break;
 		case 7:
-			cout << "  BGEU  x" << rs1 << ", x" << rs2 << ", " << hex << "0x" << (int)B_imm << endl;
+			cout << "  BGEU  " << reg[rs1] << ", " << reg[rs2] << ", " << hex << "0x" << (int)B_imm << endl;
 			break;
 		default:
 			cout << " function 3 has a wrong number/ branch instructions" << endl;

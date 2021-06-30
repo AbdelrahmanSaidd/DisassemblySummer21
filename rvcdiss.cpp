@@ -66,7 +66,8 @@ void instDecExec(unsigned int instWord)
 																			  // Second part checks the leftmost bit for the sign 
 	B_imm = ((rd & 0x1E)) | ((funct7 & 0x3F) << 5) | ((rd & 0x1) << 11) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
 	//U_imm =
-	//J_imm = 
+	J_imm = ((instWord && 0x7FE00000) >> 20) | ((instWord >> 20& 0x1) <<11) | ((instWord >>12 & 0x7F) << 12) 
+		| ((instword >> 31) ? 0xFFFFF800 : 0x0));
 
 	printPrefix(instPC, instWord);
 
@@ -190,6 +191,10 @@ void instDecExec(unsigned int instWord)
 		default:
 			cout << " function 3 has a wrong number/ branch instructions" << endl;
 		}
+	}
+	else if (opcodr == 0x6F)
+	{
+	cout << " JAL " << reg[rs1] << " , " << hex << "0x" << (int)J_imm << endl;
 	}
 	else
 	{

@@ -226,7 +226,7 @@ int main(int argc, char* argv[]) {
 
 	if (argc < 2) emitError("use: rvcdiss <machine_code_file_name>\n");
 
-	inFile.open(argv[1], ios::in | ios::binary | ios::ate); /////// edited part
+	inFile.open(argv[1], ios::in | ios::binary | ios::ate); /////// edited part.
 
 	if (inFile.is_open())
 	{

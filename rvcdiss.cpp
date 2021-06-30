@@ -65,7 +65,7 @@ void instDecExec(unsigned int instWord)
 	S_imm = ((instWord >> 25) | rd) | (((instWord >> 31) ? 0xFFFFF800 : 0x0)); // first part adds the leftmost 7 bits to rd to get the 12-bit immediate 
 																			  // Second part checks the leftmost bit for the sign 
 	B_imm = ((rd & 0x1E)) | ((funct7 & 0x3F) << 5) | ((rd & 0x1) << 11) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
-	//U_imm =
+	U_imm = ((insWord & 0xFFFFF00)>>12);
 	J_imm = ((instWord && 0x7FE00000) >> 20) | ((instWord >> 20 & 0x1) << 11) | ((instWord >> 12 & 0x7F) << 12)
 		| ((instWord >> 31) ? 0xFFFFF800 : 0x0));
 
@@ -202,6 +202,15 @@ void instDecExec(unsigned int instWord)
 		{
 			cout << "\tAUIPC\t" << reg[rs1] << reg[rd] << ", " << hex << "0x" << (int)U_imm << endl;
 		}
+		else if (opcode == 0x67) //JALR
+		{
+		cout << "\tJALR\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
+		}
+		else if (opcodr == 0x6F) //J-Type
+		{
+			cout << " JAL " << reg[rs1] << " , " << hex << "0x" << (int)J_imm << endl;
+		}
+		
 		else
 		{
 			cout << "\tUnkown Instruction \n";

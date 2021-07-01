@@ -48,6 +48,7 @@ void printPrefix(unsigned int instA, unsigned int instW) {
 void instDecExec(unsigned int instWord, bool flag)
 {
 	unsigned int rd, rs1, rs2, funct3, funct7, opcode;
+	unsigned int rd_dash, rs1_dash, rs2_dash, funct4
 	unsigned int I_imm, S_imm, B_imm, U_imm, J_imm;
 	//unsigned int address; //not used??
 
@@ -221,12 +222,36 @@ void instDecExec(unsigned int instWord, bool flag)
 	{
 		unsigned int instPC = pc - 2;
 
-		opcode = instWord & 0x00000003;
-		rd = (instWord >> 2) & 0x00000007;
+		opcode = instWord & 0x00000003;		//same spot same number of bits in all of them.
+
+		//Stack Based Load and Store
+		rd = (instWord >> 7) & 0x0000001F;
+		funct3 = (instWord >> 13) & 0x00000007;
+		rs2 = (instWord >> 2) & 0x0000001F; //in store only
+
+		//Register Based Load and Store
+		rd_dash = (instWord >> 2) & 0x00000007; //rd', 3 bits
+		rs1_dash = (instWord >> 7) & 0x00000007; //load
+		//funct3 same
+		rs2_dash = (instWord >> 2) & 0x00000007; //store
+
+		//Control Transfer instructions (Jal)
+		//funct 3 is the same
+		rs2 = (instWord >> 2) & 0x0000001F;
+		rs1 = (instWord >> 7) & 0x0000001F;
+		funct4 = (instWord >> 12) & 0x0000000F;
+
+		//Integer and Computational Instructions
+		//rd is the same
+		// rd/rs1???
+		//rd_dash same
+
+		//For SRLI and SRAI. ANDI rd'/rs1' are in a different location ???
+
+
+
 		funct3 = (instWord >> 13) & 0x00000007;
 
-		rs1 = (instWord >> 15) & 0x0000001F;
-		rs2 = (instWord >> 20) & 0x0000001F;
 		funct7 = (instWord >> 25) & 0x0000001F; //OUR TOUCH
 
 		// — inst[31] — inst[30:25] inst[24:21] inst[20]

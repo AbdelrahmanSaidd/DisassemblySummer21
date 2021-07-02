@@ -60,7 +60,7 @@ void instDecExec(unsigned int instWord, bool flag)
 		funct3 = (instWord >> 12) & 0x00000007;
 		rs1 = (instWord >> 15) & 0x0000001F;
 		rs2 = (instWord >> 20) & 0x0000001F;
-		funct7 = (instWord >> 25) & 0x0000001F; //OUR TOUCH
+		funct7 = (instWord >> 25) & 0x0000007F; //OUR TOUCH
 
 		// — inst[31] — inst[30:25] inst[24:21] inst[20]
 		I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
@@ -213,7 +213,11 @@ void instDecExec(unsigned int instWord, bool flag)
 		}
 		else if (opcode == 0x6F) //J-Type
 		{
-			cout << " JAL " << reg[rs1] << " , " << hex << "0x" << (int)J_imm << endl;
+			cout << "\tJAL\t" << reg[rd] << " , " << hex << "0x" << (int)J_imm << endl;
+		}
+		else if (opcode == 0x73) //Ecall
+		{
+		cout << "\tECALL\t" << endl;
 		}
 
 		else
@@ -344,8 +348,9 @@ int main(int argc, char* argv[]) {
 			else
 				pc += 4;
 			// remove the following line once you have a complete simulator
-			if (pc == 40) break;			// stop when PC reached address 32
+			//if (pc == 40) break;			// stop when PC reached address 32
 			instDecExec(instWord, flag);
+			if (!memory[pc]) break;
 		}
 	}
 	else emitError("Cannot access input file\n");

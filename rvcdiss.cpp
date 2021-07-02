@@ -66,9 +66,12 @@ void instDecExec(unsigned int instWord, bool flag)
 		I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
 		S_imm = ((instWord >> 25) | rd) | (((instWord >> 31) ? 0xFFFFF800 : 0x0)); // first part adds the leftmost 7 bits to rd to get the 12-bit immediate 
 																				  // Second part checks the leftmost bit for the sign 
-		B_imm = ((rd & 0x1E)) | ((funct7 & 0x3F) << 5) | ((rd & 0x1) << 11) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
+		//B_imm = ((rd & 0x1E)) | ((funct7 & 0x3F) << 5) | ((rd & 0x1) << 11) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
+		B_imm = ((instWord >> 7 & 0x1) << 12) | ((instWord >> 25 & 0x3F) << 5) | (instWord >> 8 & 0xF) | ((instWord >> 31) ? 0xFFFFF800 : 0x0);
+
 		U_imm = ((instWord & 0xFFFFF00) >> 12);
-		J_imm = ((instWord && 0x7FE00000) >> 20) | ((instWord >> 20 & 0x1) << 11) | ((instWord >> 12 & 0x7F) << 12) | ((instWord >> 31) ? 0xFFFFF800 : 0x0);
+
+		J_imm = ((instWord & 0x7FE00000) >> 20) | ((instWord >> 20 & 0x1) << 11) | ((instWord >> 12 & 0xFF) << 12) | ((instWord >> 31) ? 0xFFFFF800 : 0x0);
 
 		printPrefix(instPC, instWord);
 
@@ -249,6 +252,22 @@ void instDecExec(unsigned int instWord, bool flag)
 		//J_imm = ((instWord && 0x7FE00000) >> 20) | ((instWord >> 20 & 0x1) << 11) | ((instWord >> 12 & 0x7F) << 12) | ((instWord >> 31) ? 0xFFFFF800 : 0x0);
 
 		printPrefix(instPC, instWord);
+
+		if (opcode == 0x0)
+		{
+			unsigned int imm_LS;	//Immediate for LW and SW instructions.
+			imm_LS = (instWord & 0x0010) | ((instWord >> 9) & 0x000E) | ((instWord >> 6) & 0x1);
+
+		}
+		else if (opcode == 0x1)
+		{
+			int imm_Addi = ((instWord >> 7) & 0x0020) | ((instWord >> 2) & 0x001F) | ;
+			int imm_Jal
+		}
+		else
+		{
+
+		}
 
 	}
 }

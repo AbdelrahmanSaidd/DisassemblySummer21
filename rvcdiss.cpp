@@ -47,8 +47,8 @@ void printPrefix(unsigned int instA, unsigned int instW) {
 
 void instDecExec(unsigned int instWord, bool flag)
 {
-	unsigned int rd, rs1, rs2, funct3, funct7, opcode;
-	unsigned int rd_dash, rs1_dash, rs2_dash, funct4
+	unsigned int rd, rs1, rs2, funct3, funct7, opcode;					//32-bit
+	unsigned int rd_dash, rs1_dash, rs2_dash, funct2, funct4, funct6;	//16-bit
 	unsigned int I_imm, S_imm, B_imm, U_imm, J_imm;
 	//unsigned int address; //not used??
 
@@ -222,45 +222,31 @@ void instDecExec(unsigned int instWord, bool flag)
 	{
 		unsigned int instPC = pc - 2;
 
-		opcode = instWord & 0x00000003;		//same spot same number of bits in all of them.
 
-		//Stack Based Load and Store
+		//Constant across all instructions
+		opcode = instWord & 0x00000003;		//same spot same number of bits in all of them.
 		rd = (instWord >> 7) & 0x0000001F;
+		funct2 = (instWord >> 10) & 0x00000003;
 		funct3 = (instWord >> 13) & 0x00000007;
+		funct4 = (instWord >> 12) & 0x0000000F;
+		funct6 = (instWord >> 10) & 0x0000003F;
+
+		rs1 = (instWord >> 7) & 0x0000001F;
 		rs2 = (instWord >> 2) & 0x0000001F; //in store only
 
 		//Register Based Load and Store
 		rd_dash = (instWord >> 2) & 0x00000007; //rd', 3 bits
 		rs1_dash = (instWord >> 7) & 0x00000007; //load
-		//funct3 same
 		rs2_dash = (instWord >> 2) & 0x00000007; //store
 
-		//Control Transfer instructions (Jal)
-		//funct 3 is the same
-		rs2 = (instWord >> 2) & 0x0000001F;
-		rs1 = (instWord >> 7) & 0x0000001F;
-		funct4 = (instWord >> 12) & 0x0000000F;
-
-		//Integer and Computational Instructions
-		//rd is the same
-		// rd/rs1???
-		//rd_dash same
-
-		//For SRLI and SRAI. ANDI rd'/rs1' are in a different location ???
-
-
-
-		funct3 = (instWord >> 13) & 0x00000007;
-
-		funct7 = (instWord >> 25) & 0x0000001F; //OUR TOUCH
 
 		// — inst[31] — inst[30:25] inst[24:21] inst[20]
-		I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
-		S_imm = ((instWord >> 25) | rd) | (((instWord >> 31) ? 0xFFFFF800 : 0x0)); // first part adds the leftmost 7 bits to rd to get the 12-bit immediate 
-																				  // Second part checks the leftmost bit for the sign 
-		B_imm = ((rd & 0x1E)) | ((funct7 & 0x3F) << 5) | ((rd & 0x1) << 11) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
-		U_imm = ((instWord & 0xFFFFF00) >> 12);
-		J_imm = ((instWord && 0x7FE00000) >> 20) | ((instWord >> 20 & 0x1) << 11) | ((instWord >> 12 & 0x7F) << 12) | ((instWord >> 31) ? 0xFFFFF800 : 0x0);
+		//I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
+		//S_imm = ((instWord >> 25) | rd) | (((instWord >> 31) ? 0xFFFFF800 : 0x0)); // first part adds the leftmost 7 bits to rd to get the 12-bit immediate 
+		//																		  // Second part checks the leftmost bit for the sign 
+		//B_imm = ((rd & 0x1E)) | ((funct7 & 0x3F) << 5) | ((rd & 0x1) << 11) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
+		//U_imm = ((instWord & 0xFFFFF00) >> 12);
+		//J_imm = ((instWord && 0x7FE00000) >> 20) | ((instWord >> 20 & 0x1) << 11) | ((instWord >> 12 & 0x7F) << 12) | ((instWord >> 31) ? 0xFFFFF800 : 0x0);
 
 		printPrefix(instPC, instWord);
 

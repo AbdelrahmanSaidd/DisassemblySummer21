@@ -47,8 +47,8 @@ void printPrefix(unsigned int instA, unsigned int instW) {
 
 void instDecExec(unsigned int instWord, bool flag)
 {
-	unsigned int rd, rs1, rs2, funct3, funct7, opcode;					//32-bit
-	unsigned int rd_dash, rs1_dash, rs2_dash, funct2, funct4, funct6;	//16-bit
+	unsigned int rd, rs1, rs2, funct3, funct7, opcode;								//32-bit
+	unsigned int rd_dash, rs1_dash, rs2_dash, funct2_1, funct2_2, funct4, funct6;	//16-bit
 	unsigned int I_imm, S_imm, B_imm, U_imm, J_imm;
 	//unsigned int address; //not used??
 
@@ -200,12 +200,12 @@ void instDecExec(unsigned int instWord, bool flag)
 		}
 		else if (opcode == 0x37) //LUI
 		{
-			cout << "\tLUI\t" << reg[rs1] << reg[rd] << ", " << hex << "0x" << (int)U_imm << endl;
+			cout << "\tLUI\t" << reg[rd] << ", " << hex << "0x" << (int)U_imm << endl;
 		}
 
 		else if (opcode == 0x17) //AUIPC
 		{
-			cout << "\tAUIPC\t" << reg[rs1] << reg[rd] << ", " << hex << "0x" << (int)U_imm << endl;
+			cout << "\tAUIPC\t" << reg[rd] << ", " << hex << "0x" << (int)U_imm << endl;
 		}
 		else if (opcode == 0x67) //JALR
 		{
@@ -221,6 +221,7 @@ void instDecExec(unsigned int instWord, bool flag)
 			cout << "\tUnkown Instruction \n";
 		}
 	}
+
 	else //16-bit instructions
 	{
 		unsigned int instPC = pc - 2;
@@ -229,7 +230,9 @@ void instDecExec(unsigned int instWord, bool flag)
 		//Constant across all instructions
 		opcode = instWord & 0x00000003;		//same spot same number of bits in all of them.
 		rd = (instWord >> 7) & 0x0000001F;
-		funct2 = (instWord >> 10) & 0x00000003;
+		funct2_1 = (instWord >> 10) & 0x00000003;
+		funct2_2 = (instWord >> 5) & 0x00000003;
+
 		funct3 = (instWord >> 13) & 0x00000007;
 		funct4 = (instWord >> 12) & 0x0000000F;
 		funct6 = (instWord >> 10) & 0x0000003F;
@@ -243,37 +246,70 @@ void instDecExec(unsigned int instWord, bool flag)
 		rs2_dash = (instWord >> 2) & 0x00000007; //store
 
 
-		// — inst[31] — inst[30:25] inst[24:21] inst[20]
-		//I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
-		//S_imm = ((instWord >> 25) | rd) | (((instWord >> 31) ? 0xFFFFF800 : 0x0)); // first part adds the leftmost 7 bits to rd to get the 12-bit immediate 
-		//																		  // Second part checks the leftmost bit for the sign 
-		//B_imm = ((rd & 0x1E)) | ((funct7 & 0x3F) << 5) | ((rd & 0x1) << 11) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
-		//U_imm = ((instWord & 0xFFFFF00) >> 12);
-		//J_imm = ((instWord && 0x7FE00000) >> 20) | ((instWord >> 20 & 0x1) << 11) | ((instWord >> 12 & 0x7F) << 12) | ((instWord >> 31) ? 0xFFFFF800 : 0x0);
-
 		printPrefix(instPC, instWord);
 
 		if (opcode == 0x0)
 		{
-			unsigned int imm_LS;	//Immediate for LW and SW instructions.
-			imm_LS = (instWord & 0x0010) | ((instWord >> 9) & 0x000E) | ((instWord >> 6) & 0x1);
+			unsigned int I_LS;	//Immediate for LW and SW instructions.
+			I_LS = (instWord & 0x0010) | ((instWord >> 9) & 0x000E) | ((instWord >> 6) & 0x1);
 
+			if (funct3 == 2)
+				cout << "\tC.LW\t" << reg[rd] << ", " << hex << "0x" << (int)I_LS << "(" << reg[rs1] << ")" << "\n";
+			else if (funct3 == 6)
+				cout << "\tC.SW\t" << reg[rs2] << ", " << hex << "0x" << (int)I_LS << "(" << reg[rs1] << ")" << "\n";
 		}
 		else if (opcode == 0x1)
 		{
-			int imm_ADDI = ((instWord >> 7) & 0x0020) | ((instWord >> 2) & 0x001F) | ((instWord >> 12) ? 0xFFFFFF0 : 0x0);
-			int imm_JAL = ((instWord << 2) & 0x200) | ((instWord >> 1) & 0x180) | ((instWord << 1) & 0x40) | ((instWord >> 1) & 0x20)
-				| ((instWord << 3) & 0x10) | ((instWord >> 7) & 0x8) | ((instWord >> 2) & 0xE) | ((instWord >> 12) ? 0xFFFFFF0 : 0x0);// imm[10] | imm[9:8] | imm[7] 
-			//int imm_LUI = 0;
-			unsigned int imm_Shift = ((instWord >> 7) & 0x0020) | ((instWord >> 2) & 0x001F);
-			int imm_ANDI = ((instWord >> 7) & 0x0020) | ((instWord >> 2) & 0x001F) | ((instWord >> 12) ? 0xFFFFFF0 : 0x0);
+			int I_ADDI = ((instWord >> 7) & 0x0020) | ((instWord >> 2) & 0x001F) | ((instWord >> 12) ? 0xFFFFFF0 : 0x0);
+			int I_JAL = ((instWord << 2) & 0x200) | ((instWord >> 1) & 0x180) | ((instWord << 1) & 0x40) | ((instWord >> 1) & 0x20)
+				| ((instWord << 3) & 0x10) | ((instWord >> 7) & 0x8) | ((instWord >> 2) & 0xE) | ((instWord >> 12) ? 0xFFFFFF0 : 0x0);
 
+			int I_LUI = ((instWord << 5) & 0x10000) | ((instWord >> 2) & 0xF800) | ((instWord >> 12) ? 0xFFE0000 : 0x0);		//Double Check
+
+			unsigned int I_Shift = ((instWord >> 7) & 0x0020) | ((instWord >> 2) & 0x001F);
+			int I_ANDI = ((instWord >> 7) & 0x0020) | ((instWord << 10) & 0x001F) | ((instWord >> 12) ? 0xFFFFFF0 : 0x0);
+
+			if (funct3 == 0)
+				cout << "\tC.ADDI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_ADDI << "\n";
+			else if (funct3 == 1)
+				cout << "\tC.JALR\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_JAL << "\n";
+			else if (funct3 == 3)
+				cout << "\tC.LUI\t" << reg[rd] << ", " << hex << "0x" << (int)I_LUI << endl;
+			else if (funct3 == 4)
+			{
+				if (funct2_1 == 0)
+					cout << "\tC.SRLI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_Shift << "\n";
+				else if (funct2_1 == 1)
+					cout << "\tC.SRAI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_Shift << "\n";
+				else if (funct2_1 == 2)
+					cout << "\tC.ANDI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_ANDI << "\n";
+				else if (funct2_1 == 3)
+				{
+					if (funct2_2 == 0)
+						cout << "\tC.SUB\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+					else if (funct2_2 == 1)
+						cout << "\tC.XOR\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+					else if (funct2_2 == 2)
+						cout << "\tC.OR\tx" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+					else if (funct2_2 == 3)
+						cout << "\tC.AND\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+				}
+			}
+			else if (opcode == 0x2)//opcode = 10
+			{
+				if (funct3 == 0)
+					cout << "\tC.SLLI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_Shift << "\n";
+				else if (funct3 == 4)
+				{
+					if (rs2 == 0)
+						cout << "\tC.JALR\t" << reg[1] << ", 0(" << reg[rs1] << ")" << "\n";
+					else
+						cout << "\tC.ADD\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+				}
+			}
+			else
+				cout << "\tUnknown Compressed Instruction \n";
 		}
-		else
-		{
-
-		}
-
 	}
 }
 

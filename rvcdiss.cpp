@@ -64,7 +64,7 @@ void instDecExec(unsigned int instWord, bool flag)
 
 		// — inst[31] — inst[30:25] inst[24:21] inst[20]
 		I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
-		S_imm = ((instWord >> 25) | rd) | (((instWord >> 31) ? 0xFFFFF800 : 0x0)); // first part adds the leftmost 7 bits to rd to get the 12-bit immediate 
+		S_imm = ((instWord >> 20) | rd) | (((instWord >> 31) ? 0xFFFFF800 : 0x0)); // first part adds the leftmost 7 bits to rd to get the 12-bit immediate 
 																				  // Second part checks the leftmost bit for the sign 
 		//B_imm = ((rd & 0x1E)) | ((funct7 & 0x3F) << 5) | ((rd & 0x1) << 11) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
 		B_imm = ((instWord >> 7 & 0x1) << 12) | ((instWord >> 25 & 0x3F) << 5) | (instWord >> 8 & 0xF) | ((instWord >> 31) ? 0xFFFFF800 : 0x0);
@@ -261,8 +261,13 @@ void instDecExec(unsigned int instWord, bool flag)
 		}
 		else if (opcode == 0x1)
 		{
-			int imm_Addi = ((instWord >> 7) & 0x0020) | ((instWord >> 2) & 0x001F) | ;
-			int imm_Jal
+			int imm_ADDI = ((instWord >> 7) & 0x0020) | ((instWord >> 2) & 0x001F) | ((instWord >> 12) ? 0xFFFFFF0 : 0x0);
+			int imm_JAL = ((instWord << 2) & 0x200) | ((instWord >> 1) & 0x180) | ((instWord << 1) & 0x40) | ((instWord >> 1) & 0x20)
+				| ((instWord << 3) & 0x10) | ((instWord >> 7) & 0x8) | ((instWord >> 2) & 0xE) | ((instWord >> 12) ? 0xFFFFFF0 : 0x0);// imm[10] | imm[9:8] | imm[7] 
+			//int imm_LUI = 0;
+			unsigned int imm_Shift = ((instWord >> 7) & 0x0020) | ((instWord >> 2) & 0x001F);
+			int imm_ANDI = ((instWord >> 7) & 0x0020) | ((instWord >> 2) & 0x001F) | ((instWord >> 12) ? 0xFFFFFF0 : 0x0);
+
 		}
 		else
 		{

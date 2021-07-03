@@ -28,14 +28,16 @@
 
 using namespace std;
 
-unsigned int pc = 0x0;
+unsigned int pc = 0x0;	//Program counter
+
+//Array of the 32 available registers stored in order. For example, if we need to get register ra (x1), it is stored in reg[1].
 string reg[32] = { "zero", "ra", "sp", "gp", "tp","t0", "t1", "t2", "s0", "s1",
 					"a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7","s2", "s3",
 					"s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6" };
 
 char memory[8 * 1024];	// only 8KB of memory located at address 0
 
-void emitError(const char* s)	//OUR TOUCH (const)
+void emitError(const char* s)
 {
 	cout << s;
 	exit(0);
@@ -47,10 +49,9 @@ void printPrefix(unsigned int instA, unsigned int instW) {
 
 void instDecExec(unsigned int instWord, bool flag)
 {
-	unsigned int rd, rs1, rs2, funct3, funct7, opcode;								//32-bit
-	unsigned int rd_dash, rs1_dash, rs2_dash, funct2_1, funct2_2, funct4, funct6;	//16-bit
+	unsigned int rd, rs1, rs2, funct3, funct7, opcode;								//Used in the 32-bit instructions
+	unsigned int rd_dash, rs1_dash, rs2_dash, funct2_1, funct2_2, funct4, funct6;	//Used in the 16-bit (C) instructions
 	unsigned int I_imm, S_imm, B_imm, U_imm, J_imm;
-	//unsigned int address; //not used??
 
 	if (flag) //32-bit instructions.
 	{
@@ -60,18 +61,21 @@ void instDecExec(unsigned int instWord, bool flag)
 		funct3 = (instWord >> 12) & 0x00000007;
 		rs1 = (instWord >> 15) & 0x0000001F;
 		rs2 = (instWord >> 20) & 0x0000001F;
-		funct7 = (instWord >> 25) & 0x0000007F; //OUR TOUCH
+		funct7 = (instWord >> 25) & 0x0000007F;
 
 		// — inst[31] — inst[30:25] inst[24:21] inst[20]
-		I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
-		S_imm = ((instWord >> 20) | rd) | (((instWord >> 31) ? 0xFFFFF800 : 0x0)); // first part adds the leftmost 7 bits to rd to get the 12-bit immediate 
-																				  // Second part checks the leftmost bit for the sign 
-		//B_imm = ((rd & 0x1E)) | ((funct7 & 0x3F) << 5) | ((rd & 0x1) << 11) | (((instWord >> 31) ? 0xFFFFF000 : 0x0));
-		B_imm = ((instWord >> 7 & 0x1) << 12) | ((instWord >> 25 & 0x3F) << 5) | (instWord >> 8 & 0xF) | ((instWord >> 31) ? 0xFFFFF800 : 0x0);
+		I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));	//We take the rightmost 11 bits and then we check the 12th bit for the sign
 
-		U_imm = ((instWord & 0xFFFFF00) >> 12);
+		S_imm = ((instWord >> 20) | rd) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
+		//S_imm = ((insWord >> 7) & 0x1F) | ((instWord >> 25) & 0x3F << 5) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
+
+		B_imm = ((instWord >> 7 & 0x1) << 12) | ((instWord >> 25 & 0x3F) << 5) | (instWord >> 8 & 0xF) | ((instWord >> 31) ? 0xFFFFF800 : 0x0);
+					//imm[11]						//imm[10:5]						//imm[4:1]					//imm[12], sign bit
 
 		J_imm = ((instWord & 0x7FE00000) >> 20) | ((instWord >> 20 & 0x1) << 11) | ((instWord >> 12 & 0xFF) << 12) | ((instWord >> 31) ? 0xFFFFF800 : 0x0);
+						//imm[10:1]							//imm[11]						//imm[19:12]					//imm[20], sign bit
+
+		U_imm = ((instWord & 0xFFFFF00) >> 12);
 
 		printPrefix(instPC, instWord);
 
@@ -215,7 +219,7 @@ void instDecExec(unsigned int instWord, bool flag)
 		{
 			cout << "\tJAL\t" << reg[rd] << " , " << hex << "0x" << (int)J_imm << endl;
 		}
-		else if (opcode == 0x73) //Ecall
+		else if (opcode == 0x73) //Ecall (added to avoid having an unknown instruction when trying the test cases.
 		{
 		cout << "\tECALL\t" << endl;
 		}
@@ -228,12 +232,13 @@ void instDecExec(unsigned int instWord, bool flag)
 
 	else //16-bit instructions
 	{
-		unsigned int instPC = pc - 2;
+		unsigned int instPC = pc - 2;	//-2 and not -4 because it is only 16 bits and not 32.
 
 
-		//Constant across all instructions
 		opcode = instWord & 0x00000003;		//same spot same number of bits in all of them.
-		rd = (instWord >> 7) & 0x0000001F;
+		rd = (instWord >> 7) & 0x0000001F;	//uncompressed rd
+
+		//There is 2 funct2 variables because funct2 is used in different locations in different instruction words.
 		funct2_1 = (instWord >> 10) & 0x00000003;
 		funct2_2 = (instWord >> 5) & 0x00000003;
 
@@ -241,18 +246,18 @@ void instDecExec(unsigned int instWord, bool flag)
 		funct4 = (instWord >> 12) & 0x0000000F;
 		funct6 = (instWord >> 10) & 0x0000003F;
 
-		rs1 = (instWord >> 7) & 0x0000001F;
-		rs2 = (instWord >> 2) & 0x0000001F; //in store only
+		rs1 = (instWord >> 7) & 0x0000001F; //uncompressed rs1
+		rs2 = (instWord >> 2) & 0x0000001F; //uncompressed rs2
 
-		//Register Based Load and Store
-		rd_dash = (instWord >> 2) & 0x00000007; //rd', 3 bits
-		rs1_dash = (instWord >> 7) & 0x00000007; //load
-		rs2_dash = (instWord >> 2) & 0x00000007; //store
+	
+		rd_dash = (instWord >> 2) & 0x00000007; //rd'
+		rs1_dash = (instWord >> 7) & 0x00000007; //rs1'
+		rs2_dash = (instWord >> 2) & 0x00000007; //rs2'
 
 
 		printPrefix(instPC, instWord);
 
-		if (opcode == 0x0)
+		if (opcode == 0x0) //opcode = 00
 		{
 			unsigned int I_LS;	//Immediate for LW and SW instructions.
 			I_LS = (instWord & 0x0010) | ((instWord >> 9) & 0x000E) | ((instWord >> 6) & 0x1);
@@ -262,15 +267,17 @@ void instDecExec(unsigned int instWord, bool flag)
 			else if (funct3 == 6)
 				cout << "\tC.SW\t" << reg[rs2] << ", " << hex << "0x" << (int)I_LS << "(" << reg[rs1] << ")" << "\n";
 		}
-		else if (opcode == 0x1)
+		else if (opcode == 0x1) //opcode = 01
 		{
 			int I_ADDI = ((instWord >> 7) & 0x0020) | ((instWord >> 2) & 0x001F) | ((instWord >> 12) ? 0xFFFFFF0 : 0x0);
+
 			int I_JAL = ((instWord << 2) & 0x200) | ((instWord >> 1) & 0x180) | ((instWord << 1) & 0x40) | ((instWord >> 1) & 0x20)
 				| ((instWord << 3) & 0x10) | ((instWord >> 7) & 0x8) | ((instWord >> 2) & 0xE) | ((instWord >> 12) ? 0xFFFFFF0 : 0x0);
 
 			int I_LUI = ((instWord << 5) & 0x10000) | ((instWord >> 2) & 0xF800) | ((instWord >> 12) ? 0xFFE0000 : 0x0);		//Double Check
 
-			unsigned int I_Shift = ((instWord >> 7) & 0x0020) | ((instWord >> 2) & 0x001F);
+			unsigned int I_Shift = ((instWord >> 7) & 0x0020) | ((instWord >> 2) & 0x001F);	//Used in SRAI, SRLI, SLLI
+
 			int I_ANDI = ((instWord >> 7) & 0x0020) | ((instWord << 10) & 0x001F) | ((instWord >> 12) ? 0xFFFFFF0 : 0x0);
 
 			if (funct3 == 0)
@@ -317,8 +324,8 @@ void instDecExec(unsigned int instWord, bool flag)
 	}
 }
 
-// edited part
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) 
+{
 
 	unsigned int instWord = 0;
 	ifstream inFile;
@@ -326,7 +333,7 @@ int main(int argc, char* argv[]) {
 
 	if (argc < 2) emitError("use: rvcdiss <machine_code_file_name>\n");
 
-	inFile.open(argv[1], ios::in | ios::binary | ios::ate); /////// edited part.
+	inFile.open(argv[1], ios::in | ios::binary | ios::ate);
 
 	if (inFile.is_open())
 	{
@@ -335,22 +342,23 @@ int main(int argc, char* argv[]) {
 		inFile.seekg(0, inFile.beg);
 		if (!inFile.read((char*)memory, fsize)) emitError("Cannot read from input file\n");
 
-		while (true) {	// 110111000110101000000000    10101010 // We'll return to it
+		while (true) {	// 
 			instWord = (unsigned char)memory[pc] | (((unsigned char)memory[pc + 1]) << 8) | (((unsigned char)memory[pc + 2]) << 16) | (((unsigned char)memory[pc + 3]) << 24);
-			int temp = instWord & 0x0000001C;
+
+			int temp = instWord & 0x0000001C;	//Checking the 3rd, 4th, and 5th bit to determine the size of the instruction.
 			bool flag = true;
-			if (temp == 28)		//16-bit instructions
+
+			if (temp == 28)		//If the 3 bits checked in temp are 1s, it is a 16-bit instruction
 			{
 				instWord = (unsigned char)memory[pc] | (((unsigned char)memory[pc + 1]) << 8);
 				flag = false;
 				pc += 2;
 			}
-			else
+			else			   //32-bit instructions.
 				pc += 4;
-			// remove the following line once you have a complete simulator
-			//if (pc == 40) break;			// stop when PC reached address 32
+
 			instDecExec(instWord, flag);
-			if (!memory[pc]) break;
+			if (!memory[pc]) break;	//break when we have went over all the elements (instructions) in the memory array.
 		}
 	}
 	else emitError("Cannot access input file\n");

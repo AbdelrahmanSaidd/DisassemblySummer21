@@ -66,9 +66,8 @@ void instDecExec(unsigned int instWord, bool flag)
 		// — inst[31] — inst[30:25] inst[24:21] inst[20]
 		I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));	//We take the rightmost 11 bits and then we check the 12th bit for the sign
 
-		S_imm = ((instWord >> 20) | rd) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
-		//S_imm = ((insWord >> 7) & 0x1F) | ((instWord >> 25) & 0x3F << 5) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
-
+		S_imm = ((instWord >> 7) & 0x1F) | ((instWord >> 25) & 0x3F << 5) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
+				//imm[10:5]						//imm[4:0]					//imm[11] sign bit
 		B_imm = ((instWord >> 7 & 0x1) << 12) | ((instWord >> 25 & 0x3F) << 5) | (instWord >> 8 & 0xF) | ((instWord >> 31) ? 0xFFFFF800 : 0x0);
 					//imm[11]						//imm[10:5]						//imm[4:1]					//imm[12], sign bit
 
@@ -345,17 +344,18 @@ int main(int argc, char* argv[])
 		while (true) {	// 
 			instWord = (unsigned char)memory[pc] | (((unsigned char)memory[pc + 1]) << 8) | (((unsigned char)memory[pc + 2]) << 16) | (((unsigned char)memory[pc + 3]) << 24);
 
-			int temp = instWord & 0x0000001C;	//Checking the 3rd, 4th, and 5th bit to determine the size of the instruction.
+			int temp = instWord & 0x00000003;	//Checking the 1st and 2nd bit to determine the size of the instruction.
 			bool flag = true;
 
-			if (temp == 28)		//If the 3 bits checked in temp are 1s, it is a 16-bit instruction
+			if (temp == 3)		//If the last 2 bits checked in temp are 1s, it is a 32-bit instruction
+				pc += 4;
+
+			else			   //16-bit instructions.
 			{
 				instWord = (unsigned char)memory[pc] | (((unsigned char)memory[pc + 1]) << 8);
 				flag = false;
 				pc += 2;
 			}
-			else			   //32-bit instructions.
-				pc += 4;
 
 			instDecExec(instWord, flag);
 			if (!memory[pc]) break;	//break when we have went over all the elements (instructions) in the memory array.

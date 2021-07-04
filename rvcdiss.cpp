@@ -107,7 +107,7 @@ void instDecExec(unsigned int instWord, bool flag)
 
 				break;
 			case 6:
-				cout << "\tOR\tx" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+				cout << "\tOR\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
 				break;
 
 			case 7:

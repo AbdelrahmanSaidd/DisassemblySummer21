@@ -131,7 +131,7 @@ void instDecExec(unsigned int instWord, bool flag)
 				break;
 			case 3: cout << "\tSLTIU\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
 				break;
-			case 4: cout << "\tXORI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n"; 
+			case 4: cout << "\tXORI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";
 				break;
 			case 5: if (funct7 == 0)
 				cout << "\tSRLI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_imm << "\n";

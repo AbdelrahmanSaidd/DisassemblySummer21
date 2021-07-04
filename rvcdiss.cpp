@@ -35,6 +35,8 @@ string reg[32] = { "zero", "ra", "sp", "gp", "tp","t0", "t1", "t2", "s0", "s1",
 					"a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7","s2", "s3",
 					"s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6" };
 
+string regC[8] = { "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5" };
+
 char memory[8 * 1024];	// only 8KB of memory located at address 0
 
 void emitError(const char* s)
@@ -67,12 +69,12 @@ void instDecExec(unsigned int instWord, bool flag)
 		I_imm = ((instWord >> 20) & 0x7FF) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));	//We take the rightmost 11 bits and then we check the 12th bit for the sign
 
 		S_imm = ((instWord >> 7) & 0x1F) | ((instWord >> 25) & 0x3F << 5) | (((instWord >> 31) ? 0xFFFFF800 : 0x0));
-				//imm[10:5]						//imm[4:0]					//imm[11] sign bit
+		//imm[10:5]						//imm[4:0]					//imm[11] sign bit
 		B_imm = ((instWord >> 7 & 0x1) << 12) | ((instWord >> 25 & 0x3F) << 5) | (instWord >> 8 & 0xF) | ((instWord >> 31) ? 0xFFFFF800 : 0x0);
-					//imm[11]						//imm[10:5]						//imm[4:1]					//imm[12], sign bit
+		//imm[11]						//imm[10:5]						//imm[4:1]					//imm[12], sign bit
 
 		J_imm = ((instWord & 0x7FE00000) >> 20) | ((instWord >> 20 & 0x1) << 11) | ((instWord >> 12 & 0xFF) << 12) | ((instWord >> 31) ? 0xFFFFF800 : 0x0);
-						//imm[10:1]							//imm[11]						//imm[19:12]					//imm[20], sign bit
+		//imm[10:1]							//imm[11]						//imm[19:12]					//imm[20], sign bit
 
 		U_imm = ((instWord & 0xFFFFF00) >> 12);
 
@@ -220,7 +222,7 @@ void instDecExec(unsigned int instWord, bool flag)
 		}
 		else if (opcode == 0x73) //Ecall (added to avoid having an unknown instruction when trying the test cases.
 		{
-		cout << "\tECALL\t" << endl;
+			cout << "\tECALL\t" << endl;
 		}
 
 		else
@@ -234,7 +236,7 @@ void instDecExec(unsigned int instWord, bool flag)
 		unsigned int instPC = pc - 2;	//-2 and not -4 because it is only 16 bits and not 32.
 
 
-		opcode = instWord & 0x00000003;		//same spot same number of bits in all of them.
+		opcode = instWord & 0x00000003;	//...11	//same spot same number of bits in all of them.
 		rd = (instWord >> 7) & 0x0000001F;	//uncompressed rd
 
 		//There is 2 funct2 variables because funct2 is used in different locations in different instruction words.
@@ -248,10 +250,13 @@ void instDecExec(unsigned int instWord, bool flag)
 		rs1 = (instWord >> 7) & 0x0000001F; //uncompressed rs1
 		rs2 = (instWord >> 2) & 0x0000001F; //uncompressed rs2
 
-	
-		rd_dash = (instWord >> 2) & 0x00000007; //rd'
+
+		rd_dash = (instWord >> 2) & 0x00000007; //rd' //LW instruction
 		rs1_dash = (instWord >> 7) & 0x00000007; //rs1'
 		rs2_dash = (instWord >> 2) & 0x00000007; //rs2'
+
+		unsigned int I_Shift = ((instWord >> 7) & 0x0020) | ((instWord >> 2) & 0x001F);	//Used in SRAI, SRLI, SLLI
+
 
 
 		printPrefix(instPC, instWord);
@@ -275,55 +280,56 @@ void instDecExec(unsigned int instWord, bool flag)
 
 			int I_LUI = ((instWord << 5) & 0x10000) | ((instWord >> 2) & 0xF800) | ((instWord >> 12) ? 0xFFE0000 : 0x0);		//Double Check
 
-			unsigned int I_Shift = ((instWord >> 7) & 0x0020) | ((instWord >> 2) & 0x001F);	//Used in SRAI, SRLI, SLLI
 
 			int I_ANDI = ((instWord >> 7) & 0x0020) | ((instWord << 10) & 0x001F) | ((instWord >> 12) ? 0xFFFFFF0 : 0x0);
 
 			if (funct3 == 0)
-				cout << "\tC.ADDI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_ADDI << "\n";
+				cout << "\tC.ADDI\t" << regC[rd_dash] << ", " << hex << "0x" << (int)I_ADDI << "\n"; //Addi	rd, rd, nzimm[5:0]
 			else if (funct3 == 1)
-				cout << "\tC.JALR\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_JAL << "\n";
+				cout << "\tC.JAL\t" << I_JAL << "\n"; //Jal	x1, imm[11:1]	
 			else if (funct3 == 3)
-				cout << "\tC.LUI\t" << reg[rd] << ", " << hex << "0x" << (int)I_LUI << endl;
+				cout << "\tC.LUI\t" << reg[rd] << ", " << hex << "0x" << (int)I_LUI << endl;	//Lui	rd, nzimm[17:12]
 			else if (funct3 == 4)
 			{
 				if (funct2_1 == 0)
-					cout << "\tC.SRLI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_Shift << "\n";
+					cout << "\tC.SRLI\t" << regC[rd_dash] << ", " << hex << "0x" << (int)I_Shift << "\n"; //Srli	rd', rd', shamt[5:0]
 				else if (funct2_1 == 1)
-					cout << "\tC.SRAI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_Shift << "\n";
+					cout << "\tC.SRAI\t" << regC[rd_dash] << ", " << hex << "0x" << (int)I_Shift << "\n"; //Srai	rd', rd', shamt[5:0]
 				else if (funct2_1 == 2)
-					cout << "\tC.ANDI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_ANDI << "\n";
+					cout << "\tC.ANDI\t" << regC[rd_dash] << ", " << hex << "0x" << (int)I_ANDI << "\n";  //Addi	rd', rd', imm[5:0]
 				else if (funct2_1 == 3)
 				{
 					if (funct2_2 == 0)
-						cout << "\tC.SUB\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+						cout << "\tC.SUB\t" << regC[rs1_dash] << ", " << regC[rs2_dash] << "\n";		//Sub	rd', rd', rs2'
 					else if (funct2_2 == 1)
-						cout << "\tC.XOR\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+						cout << "\tC.XOR\t" << regC[rs1_dash] << ", " << regC[rs2_dash] << "\n";		//Xor	rd', rd', rs2'
 					else if (funct2_2 == 2)
-						cout << "\tC.OR\tx" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+						cout << "\tC.OR\t" << regC[rs1_dash] << ", " << regC[rs2_dash] << "\n";			//Or	rd', rd', rs2'
 					else if (funct2_2 == 3)
-						cout << "\tC.AND\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
+						cout << "\tC.AND\t" << regC[rs1_dash] << ", " << regC[rs2_dash] << "\n";		//Xor	rd', rd', rs2'
+
 				}
 			}
-			else if (opcode == 0x2)//opcode = 10
-			{
-				if (funct3 == 0)
-					cout << "\tC.SLLI\t" << reg[rd] << ", " << reg[rs1] << ", " << hex << "0x" << (int)I_Shift << "\n";
-				else if (funct3 == 4)
-				{
-					if (rs2 == 0)
-						cout << "\tC.JALR\t" << reg[1] << ", 0(" << reg[rs1] << ")" << "\n";
-					else
-						cout << "\tC.ADD\t" << reg[rd] << ", " << reg[rs1] << ", " << reg[rs2] << "\n";
-				}
-			}
-			else
-				cout << "\tUnknown Compressed Instruction \n";
 		}
+		else if (opcode == 0x2)//opcode = 10
+		{
+			if (funct3 == 0)
+				cout << "\tC.SLLI\t" << reg[rd] << ", " << hex << "0x" << (int)I_Shift << "\n";			//Slli	rd, rd, shamt[5:0]
+			else if (funct3 == 4)
+			{
+				if (rs2 == 0)
+					cout << "\tC.JALR\t" << reg[rs1] << "\n";											//Jalr	x1, 0(rs1)
+				else
+					cout << "\tC.ADD\t" << reg[rs1] << ", " << reg[rs2] << "\n";						//Add	rd, rd, rs2
+			}
+		}
+		else
+			cout << "\tUnknown Compressed Instruction \n";
+
 	}
 }
 
-int main(int argc, char* argv[]) 
+int main(int argc, char* argv[])
 {
 
 	unsigned int instWord = 0;
@@ -342,7 +348,7 @@ int main(int argc, char* argv[])
 		if (!inFile.read((char*)memory, fsize)) emitError("Cannot read from input file\n");
 
 		while (true) {	// 
-			
+
 
 			int temp = memory[pc] & 0x00000003;	//Checking the 1st and 2nd bit to determine the size of the instruction.
 			bool flag = true;

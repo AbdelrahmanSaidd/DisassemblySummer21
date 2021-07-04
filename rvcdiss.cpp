@@ -342,13 +342,16 @@ int main(int argc, char* argv[])
 		if (!inFile.read((char*)memory, fsize)) emitError("Cannot read from input file\n");
 
 		while (true) {	// 
-			instWord = (unsigned char)memory[pc] | (((unsigned char)memory[pc + 1]) << 8) | (((unsigned char)memory[pc + 2]) << 16) | (((unsigned char)memory[pc + 3]) << 24);
+			
 
-			int temp = instWord & 0x00000003;	//Checking the 1st and 2nd bit to determine the size of the instruction.
+			int temp = memory[pc] & 0x00000003;	//Checking the 1st and 2nd bit to determine the size of the instruction.
 			bool flag = true;
 
 			if (temp == 3)		//If the last 2 bits checked in temp are 1s, it is a 32-bit instruction
+			{
+				instWord = (unsigned char)memory[pc] | (((unsigned char)memory[pc + 1]) << 8) | (((unsigned char)memory[pc + 2]) << 16) | (((unsigned char)memory[pc + 3]) << 24);
 				pc += 4;
+			}
 
 			else			   //16-bit instructions.
 			{
